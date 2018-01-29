@@ -60,3 +60,18 @@ def _vcorrcoef(X, Y, method='pearson', sampleMask=None, featureMask=None):
 	r[numpy.isnan(r)] = 0
 
 	return r
+
+##
+# Adapted from http://stackoverflow.com/questions/2130016/splitting-a-list-of-arbitrary-size-into-only-roughly-n-equal-parts
+##
+def _chunkMatrix(seq, num):
+	avg = round(len(seq) / float(num))
+	out = []
+	last = 0.0
+
+	for i in range(0, num-1):
+		out.append(seq[int(last):int(last + avg)])
+		last += avg
+	out.append(seq[int(last):max(seq)+1])
+
+	return out

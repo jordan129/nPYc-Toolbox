@@ -14,6 +14,7 @@ from ..utilities import removeDuplicateColumns
 from ..utilities import normalisation
 from ..utilities.normalisation._normaliserABC import Normaliser
 import warnings
+from ..utilities._internal import _chunkMatrix
 
 class Dataset:
 	"""
@@ -162,6 +163,14 @@ class Dataset:
 
 
 	@property
+	def datasetLevel(self):
+		"""
+		Subclasses override this method to test their sampleMetadata and return the relevant level.
+		"""
+		return DatasetLevel.Unknown
+
+
+	@property
 	def name(self) -> str:
 		"""
 		Returns or sets the name of the dataset. *name* must be a string
@@ -192,6 +201,81 @@ class Dataset:
 		else:
 			self._Normalisation = normaliser
 
+
+	def apply(self, func, args, rows=None, columns=None, parallel=True):
+		"""
+		Apply a function to a set of elements of samples or features in an nPYc dataset.
+		:param func:
+		:param args:
+		:param rows:
+		:param columns:
+		:param parallel:
+		:return:
+		"""
+		try:
+
+			dataCopy = copy.deepcopy(self.intensityData)
+
+			# Deep Copying for safety?
+			if rows is not None and columns is not None:
+				raise ValueError
+
+			if parallel:
+				# Set up multiprocessing enviroment
+				import multiprocessing
+
+				# Generate an index and set up pool
+				# Use one less workers than CPU cores
+				if multiprocessing.cpu_count() - 1 <= 0:
+					cores = 1
+				else:
+					cores = multiprocessing.cpu_count() - 1
+
+				pool = multiprocessing.Pool(processes=cores)
+
+				instances = range(0, cores)
+
+				# Break features into no cores chunks
+				if rows is not None:
+					applyIndex = _chunkMatrix(range(0, dataCopy.shape[0]), cores)
+					ids = self.sampleMetadata['Sample Base Name']
+				elif columns is not None:
+					applyIndex = _chunkMatrix(range(0, dataCopy.shape[1]), cores)
+					ids = self.featureMetadata['Feature Name']
+				else:
+					raise ValueError("")
+
+				# batchCorrection snippet - to modify
+				results2 = [pool.apply_async(func,
+											 args=args)
+							for w in instances]
+
+				results2 = [p.get(None) for p in results2]
+
+				results = list()
+				# Unpack results
+				for instanceOutput in results2:
+					for item in instanceOutput:
+						results.append(item)
+
+				# Shut down the pool
+				pool.close()
+			else:
+				# Just run it
+				# Iterate over features in one batch and correct them
+				#
+				n_iters =
+				for currIdx in range():
+
+				if rows is not None:
+					results = func(dataCopy[currIdx], args)
+				elif colums is not None:
+					results = func(dataCopy[:, currIdx], args)
+
+		return results, ids
+
+	except Exception as exp:
+		raise exp
 
 	def __repr__(self):
 		"""
@@ -1695,9 +1779,14 @@ class Dataset:
 		:param bool filterMetadata: If ``True`` does not export the sampleMetadata and featureMetadata columns listed in self.Attributes['sampleMetadataNotExported'] and self.Attributes['featureMetadataNotExported']
 		:raises ValueError: if *saveFormat* is not understood
 		"""
+
+		saveFormats = ['CSV', 'UnifiedCSV','ISATAB']
+
 		# Validate inputs
 		if not isinstance(destinationPath, str):
 			raise TypeError('`destinationPath` must be a string.')
+		if not saveFormat in saveFormats:
+			raise ValueError('`saveFormat` must be one of: %s' % (str(saveFormats)))
 		if not isinstance(withExclusions, bool):
 			raise TypeError('`withExclusions` must be True or False')
 		if not isinstance(filterMetadata, bool):
@@ -1879,8 +1968,7 @@ class Dataset:
 				rangeMask[numpy.logical_and(self.featureMetadata[by].values >= featureRange[0], self.featureMetadata[by].values <= featureRange[1])] = True
 
 			return self.featureMetadata.loc[rangeMask], self.intensityData[:, rangeMask]
-		else:
-			raise TypeError('Dataset.VariableType type not understood!')
+
 
 	def _exportHDF5(self, destinationPath):
 
