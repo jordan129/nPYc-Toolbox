@@ -7,6 +7,8 @@ The :py:mod:`~nPYc.batchAndROCorrection` module provides tools to detect and cor
 	
 	Samples pre and post run-order and batch correction, plus the fit applied to a dataset.
 """
+
 from ._batchAndROCorrection import correctMSdataset
+from ._batchCorrectionAlgorithms import batch_correction_algorithms
 
 __all__ = ['correctMSdataset']
