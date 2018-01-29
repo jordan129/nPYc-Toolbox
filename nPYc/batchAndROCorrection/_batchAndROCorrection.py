@@ -7,7 +7,7 @@ import scipy
 from scipy import interp
 from scipy.signal import savgol_filter
 import statsmodels.api as sm
-import _batchCorrectionAlgorithms
+from ._batchCorrectionAlgorithms import batch_correction_algorithms
 import tempfile
 import os
 import shutil
@@ -55,7 +55,7 @@ def correctMSdataset(data, method='LOWESS', align='median', parallelise=True,
         raise TypeError("data must be a MSDataset instance")
 
     if method is not None:
-        if not isinstance(method, str) & (method in _batchCorrectionAlgorithms.batch_correction_algorithms.keys()):
+        if not isinstance(method, str) & (method in batch_correction_algorithms.keys()):
             raise ValueError('method must be == LOWESS or SavitzkyGolay')
     if not isinstance(align, str) & (align in {'mean', 'median'}):
         raise ValueError('align must be == mean or median')
@@ -99,7 +99,7 @@ def _batchCorrection(data, dataframe, method='LOWESS',
     if not isinstance(data, numpy.ndarray):
         raise TypeError('data must be a numpy array')
     if method is not None:
-        if not isinstance(method, str) & (method in _batchCorrectionAlgorithms.batch_correction_algorithms.keys()):
+        if not isinstance(method, str) & (method in batch_correction_algorithms.keys()):
             raise ValueError('method must be == LOWESS or SavitzkyGolay')
     if not isinstance(parallelise, bool):
         raise TypeError('parallelise must be True or False')
@@ -110,6 +110,7 @@ def _batchCorrection(data, dataframe, method='LOWESS',
     parameters = dict()
     parameters['method'] = method
     parameters['align'] = align
+
     # Parse kwargs
     for key, value in kwargs.items():
         parameters[key] = value
@@ -203,7 +204,7 @@ def _batchCorrectionWorker(data, dataframe, featureIndex, parameters, w):
         # Generate a copy of the dataframe with the intensity features for this dataset
         feature_dataframe = dataframe.assign(y=feature)
 
-        fitted = _batchCorrectionAlgorithms.batch_correction_algorithms[parameters['method']](feature_dataframe, **parameters)
+        fitted = batch_correction_algorithms[parameters['method']](feature_dataframe, **parameters)
         feature = feature / fitted
 
         exclude = list()

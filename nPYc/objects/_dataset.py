@@ -107,7 +107,6 @@ class Dataset:
 
 		self._name = self.__class__.__name__
 
-
 	@property
 	def intensityData(self):
 		"""
@@ -119,7 +118,6 @@ class Dataset:
 	def intensityData(self, X : numpy.ndarray):
 
 		self._intensityData = X
-
 
 	@property
 	def noSamples(self) -> int:
@@ -133,7 +131,6 @@ class Dataset:
 			noSamples = 0
 		return noSamples
 
-
 	@property
 	def noFeatures(self) -> int:
 		"""
@@ -145,7 +142,6 @@ class Dataset:
 		except:
 			noFeatures = 0
 		return noFeatures
-
 
 	@property
 	def log(self) -> str:
@@ -161,7 +157,6 @@ class Dataset:
 
 		return output
 
-
 	@property
 	def datasetLevel(self):
 		"""
@@ -169,14 +164,12 @@ class Dataset:
 		"""
 		return DatasetLevel.Unknown
 
-
 	@property
 	def name(self) -> str:
 		"""
 		Returns or sets the name of the dataset. *name* must be a string
 		"""
 		return self._name
-
 
 	@name.setter
 	def name(self, value : str):
@@ -201,8 +194,7 @@ class Dataset:
 		else:
 			self._Normalisation = normaliser
 
-
-	def apply(self, func, args, rows=None, columns=None, parallel=True):
+	def apply(self, func, args, index=None, axis=0, parallel=True, parallel_type="block"):
 		"""
 		Apply a function to a set of elements of samples or features in an nPYc dataset.
 		:param func:
@@ -213,15 +205,19 @@ class Dataset:
 		:return:
 		"""
 		try:
-
+			# to copy or not to copy...
+			# TODO profile deep copying patters and safety (copy here? copy inside calls?)
+			# Do not deep copy and ensure everything always works in views/returns new arrays?
 			dataCopy = copy.deepcopy(self.intensityData)
 
-			# Deep Copying for safety?
-			if rows is not None and columns is not None:
-				raise ValueError
+			if index is None:
+				index = numpy.arange(dataCopy.shape[axis])
+				# if
+				if max(index) > dataCopy.shape[axis]:
+					raise ValueError()
 
 			if parallel:
-				# Set up multiprocessing enviroment
+				# Set up multiprocessing environment
 				import multiprocessing
 
 				# Generate an index and set up pool
@@ -236,19 +232,17 @@ class Dataset:
 				instances = range(0, cores)
 
 				# Break features into no cores chunks
-				if rows is not None:
-					applyIndex = _chunkMatrix(range(0, dataCopy.shape[0]), cores)
-					ids = self.sampleMetadata['Sample Base Name']
-				elif columns is not None:
-					applyIndex = _chunkMatrix(range(0, dataCopy.shape[1]), cores)
-					ids = self.featureMetadata['Feature Name']
-				else:
-					raise ValueError("")
+				applyIndex = _chunkMatrix(index, cores)
+				# Build the ids immediately
+				if axis == 0:
+					ids = self.sampleMetadata['Sample Base Name'].values
+				elif axis == 1:
+					ids = self.sampleMetadata['Feature Name'].values
 
-				# batchCorrection snippet - to modify
-				results2 = [pool.apply_async(func,
-											 args=args)
-							for w in instances]
+				# Process and append the index to insert
+
+				args = tuple(applyIndex) + args
+				results2 = [pool.apply_async(func, args=args) for w in instances]
 
 				results2 = [p.get(None) for p in results2]
 
@@ -260,22 +254,27 @@ class Dataset:
 
 				# Shut down the pool
 				pool.close()
+
 			else:
-				# Just run it
-				# Iterate over features in one batch and correct them
-				#
-				n_iters =
-				for currIdx in range():
+				results = list()
+				ids = list()
 
-				if rows is not None:
-					results = func(dataCopy[currIdx], args)
-				elif colums is not None:
-					results = func(dataCopy[:, currIdx], args)
+				# Iterate
+				for currIdx in range(len(index)):
+					if axis == 0:
+						results.append(func(dataCopy[currIdx, :], args))
+						ids.append(self.sampleMetadata['Sample Base Name'])
+					elif axis == 1:
+						results.append(func(dataCopy[:, currIdx], args))
+						ids.append(self.featureMetadata['Feature Name'])
+			return results, ids
 
-		return results, ids
-
-	except Exception as exp:
-		raise exp
+		except Exception as exp:
+			raise exp
+		except ValueError as verr:
+			raise verr
+		except TypeError as terr:
+			raise terr
 
 	def __repr__(self):
 		"""

@@ -1,4 +1,5 @@
 import os
+import numpy
 
 def _copyBackingFiles(toolboxPath, output):
 	"""
@@ -61,6 +62,7 @@ def _vcorrcoef(X, Y, method='pearson', sampleMask=None, featureMask=None):
 
 	return r
 
+
 ##
 # Adapted from http://stackoverflow.com/questions/2130016/splitting-a-list-of-arbitrary-size-into-only-roughly-n-equal-parts
 ##
@@ -75,3 +77,38 @@ def _chunkMatrix(seq, num):
 	out.append(seq[int(last):max(seq)+1])
 
 	return out
+
+
+def _blockparallel_hander(func, data, args, index, axis, w):
+	"""
+
+	Helper function to process parallelism where each core performs a certain operation multiple times
+
+	:param func:
+	:param args:
+	:param index:
+	:param w:
+	:return:
+	"""
+
+	# Check if index contains a list or range argument, otherwise throw error
+	# Function is not expected to be used with parallelisation schemes where each task represents a single operation
+
+	if isinstance(index[0], (range, list, tuple)):
+		featureList = index[w]
+	else:
+		raise TypeError()
+
+	results = list()
+
+	## TODO Check how to handle internal indexing. Test unpacking
+	# Loop over all elements in featureList
+	for i in featureList:
+		if axis == 0:
+			curr_data = data[i, :]
+		elif axis == 1:
+			curr_data = data[:, i]
+
+		results.append(func(curr_data, *args))
+
+	return results
