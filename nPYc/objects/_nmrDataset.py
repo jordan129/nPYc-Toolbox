@@ -215,7 +215,7 @@ class NMRDataset(Dataset):
 	def updateMasks(self, filterSamples=True, filterFeatures=True,
 					sampleTypes=[SampleType.StudySample, SampleType.StudyPool],
 					assayRoles=[AssayRole.Assay, AssayRole.PrecisionReference], exclusionRegions=None,
-					sampleQCChecks=['ImportFail','CalibrationFail','LineWidthFail','CalibrationFail','BaselineFail','WaterPeakFail'],**kwargs):
+					sampleQCChecks=['LineWidthFail','CalibrationFail','BaselineFail','WaterPeakFail'],**kwargs):
 		"""
 		Update :py:attr:`~Dataset.sampleMask` and :py:attr:`~Dataset.featureMask` according to parameters.
 
@@ -284,7 +284,16 @@ class NMRDataset(Dataset):
 			columnNames.extend(sampleQCChecks)
 			fail_summary = self.sampleMetadata.loc[:, columnNames]
 
-			idxToMask = fail_summary[(fail_summary == True).any(1)].index
+			fail_summary = fail_summary[(fail_summary == True).any(1)]
+
+			idxToMask = fail_summary.index
+
+			for idx, row in fail_summary.iterrows():
+				exclusion_message = ""
+				for qc_check in range(1, len(columnNames)):
+					if row[columnNames[qc_check]] == True:
+						exclusion_message += columnNames[qc_check] + " + "
+				self.sampleMetadata.loc[idx, 'Exclusion Details'] = exclusion_message.strip(" + ")
 
 			self.sampleMask[idxToMask] = False
 
