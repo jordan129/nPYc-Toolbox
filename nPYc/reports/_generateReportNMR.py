@@ -226,10 +226,10 @@ def _featureReport(dataset, output=None):
 								attributes=dataset.Attributes,
 								version=version,
 								failSummary=fail_summary,
-								graphicsPath='/report_featureSummary'))
+								graphicsPath=graphicsPath))
 		f.close()
 
-		copyBackingFiles(toolboxPath(), graphicsPath)
+		copyBackingFiles(toolboxPath(), os.path.join(output, 'graphics'))
 
 
 def _finalReport(dataset, output=None, pcaModel=None):
@@ -242,7 +242,12 @@ def _finalReport(dataset, output=None, pcaModel=None):
 
 	item['toA_from'] = dataset.sampleMetadata['Acquired Time'].min().strftime('%b %d %Y')
 	item['toA_to'] = dataset.sampleMetadata['Acquired Time'].max().strftime('%b %d %Y')
-	
+
+	# Generate sample Summary
+	sampleSummary = _generateSampleReport(dataset, withExclusions=True, output=None, returnOutput=True)
+	sampleSummary['isFinalReport'] = True
+	item['sampleSummary'] = sampleSummary
+
 	##
 	# Report stats
 	##
@@ -329,20 +334,21 @@ def _finalReport(dataset, output=None, pcaModel=None):
 	##
 	if pcaModel:
 		if output:
-			pcaPath = graphicsPath
+			pcaPath = output
 		else:
 			pcaPath = None
-		pcaModel = generateBasicPCAReport(pcaModel, dataset, figureCounter=4, output=pcaPath, fileNamePrefix='')
+		pcaModel = generateBasicPCAReport(pcaModel, dataset, figureCounter=6, output=pcaPath, fileNamePrefix='')
 
 	##
 	# Sample summary
 	##
-	sampleSummary = _generateSampleReport(dataset, withExclusions=True, output=None, returnOutput=True)
 	if not output:
 		print('Table 1: Summary of samples present')
 		display(sampleSummary['Acquired'])
-		print('Table 2: Summary of samples excuded')
-		display(sampleSummary['Excluded Details'])
+		if 'StudySamples Exclusion Details' in sampleSummary:
+			print('Table 2: Summary of samples excluded')
+			display(sampleSummary['StudySamples Exclusion Details'])
+
 	##
 	# Write HTML if saving
 	##
@@ -364,9 +370,9 @@ def _finalReport(dataset, output=None, pcaModel=None):
 								attributes=dataset.Attributes,
 								version=version,
 								sampleSummary=sampleSummary,
-								graphicsPath='/report_finalSummary',
+								graphicsPath=graphicsPath,
 								pcaPlots=pcaModel)
 								)
 		f.close()
 
-		copyBackingFiles(toolboxPath(), graphicsPath)
+		copyBackingFiles(toolboxPath(),os.path.join(output, 'graphics'))
