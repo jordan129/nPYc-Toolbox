@@ -1,15 +1,13 @@
-# nPYc Toolbox <img src="nPYc/Templates/toolbox_logo.png" width="200" height="200" align="right" />
+# nPYc Toolbox <img src="nPYc/Templates/toolbox_logo.png" width="200" style="max-width: 30%;" align="right" />
 
-[![Build Status](https://travis-ci.org/phenomecentre/nPYc-Toolbox.svg?branch=master)](https://travis-ci.org/phenomecentre/nPYc-Toolbox) [![codecov](https://codecov.io/gh/phenomecentre/nPYc-Toolbox/branch/master/graph/badge.svg)](https://codecov.io/gh/phenomecentre/nPYc-Toolbox) ![Python36](https://img.shields.io/badge/python-3.6-blue.svg) [![Documentation Status](https://readthedocs.org/projects/npyc-toolbox/badge/?version=latest)](http://npyc-toolbox.readthedocs.io/en/latest/?badge=latest)
-
-* Version 1.0.2a
+[![Build Status](https://travis-ci.org/phenomecentre/nPYc-Toolbox.svg?branch=master)](https://travis-ci.org/phenomecentre/nPYc-Toolbox) [![Documentation Status](https://readthedocs.org/projects/npyc-toolbox/badge/?version=latest)](http://npyc-toolbox.readthedocs.io/en/latest/?badge=latest) [![codecov](https://codecov.io/gh/phenomecentre/nPYc-Toolbox/branch/master/graph/badge.svg)](https://codecov.io/gh/phenomecentre/nPYc-Toolbox) ![Python36](https://img.shields.io/badge/python-3.6-blue.svg) [![PyPI](https://img.shields.io/pypi/v/nPYc.svg)](https://pypi.org/project/nPYc/)
 
 A Python implementation of the [NPC](http://phenomecentre.org) toolchain for the import, quality-control, and preprocessing of metabolic profiling datasets.
 
 Imports:
- - Peak-picked LC-MS data (XCMS, Progenesis QI)
+ - Peak-picked LC-MS data (XCMS, Progenesis&nbsp;QI, *&* Metaboscape)
  - Raw NMR spectra (Bruker format)
- - Targeted datasets (TargetLynx, Bruker BI-LISA & BI-Quant-Ur)
+ - Targeted datasets (TargetLynx, Bruker BI-LISA *&* BI-Quant-Ur)
 
 Provides:
  - Batch *&* drift correction for LC-MS datasets
@@ -24,9 +22,9 @@ Exports:
 
 ## Installation
 
-To install _via_ pip, run:
+To install _via_ [pip](https://pypi.org/project/nPYc/), run:
 
-    pip install git+https://github.com/phenomecentre/nPYc-Toolbox 
+    pip install nPYc 
 
 To install from a local copy of the source, simply navigate to the main package folder and run:
 
