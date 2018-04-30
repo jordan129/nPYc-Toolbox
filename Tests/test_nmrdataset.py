@@ -287,8 +287,6 @@ class test_nmrdataset_synthetic(unittest.TestCase):
 			numpy.testing.assert_array_equal(expected, self.dataset.sampleMetadata['LineWidthFail'].values)
 
 			# Check other tests have not happend
-			#for skipedCheck in ['BaselineFail', 'WaterPeakFail']:
-		#		self.assertFalse(skipedCheck in self.dataset.sampleMetadata.columns)
 			# Commented out assuming the test nmr dataset obtained with generateTestDataset always has these columns
 
 			#for skipedCheck in ['BaselineFail', 'WaterPeakFail']:
